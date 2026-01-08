@@ -234,7 +234,8 @@ class InsuranceDriverAnalysis(DriverAnalysis):
             if is_bps_metric:
                 diff_val = row.get("diff") if hasattr(row, "get") else row["diff"]
                 if pd.notna(diff_val) and isinstance(diff_val, (int, float)):
-                    bps_value = diff_val * 100
+                    # diff is in decimal form (e.g., 0.0002 for 2 bps), multiply by 10000
+                    bps_value = diff_val * 10000
                     return f"{bps_value:.0f} bps"
                 return ""
             fmt = metric_props.get("fmt", "")
@@ -299,9 +300,9 @@ class InsuranceDriverAnalysis(DriverAnalysis):
 
         for col in ["curr", "prev", "diff", "diff_pct"]:
             if col == "diff" and is_bps_metric:
-                # For bps metrics, show Change as bps
+                # For bps metrics, show Change as bps (diff is in decimal form, multiply by 10000)
                 breakout_df[col] = breakout_df.apply(
-                    lambda row: f"{row['diff'] * 100:.0f} bps" if pd.notna(row['diff']) and isinstance(row['diff'], (int, float)) else "",
+                    lambda row: f"{row['diff'] * 10000:.0f} bps" if pd.notna(row['diff']) and isinstance(row['diff'], (int, float)) else "",
                     axis=1
                 )
             elif col == "diff_pct" and is_bps_metric:

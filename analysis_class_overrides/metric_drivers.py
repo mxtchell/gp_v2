@@ -221,18 +221,24 @@ class InsuranceDriverAnalysis(DriverAnalysis):
     def _format_metric_column(self, row, col):
         """Format metric column, with special handling for bps growth metrics."""
         metric_props = self.helper.get_metric_prop(row.name, self.metric_props)
+        growth_fmt = metric_props.get("growth_fmt", "")
+        is_bps_metric = "bps" in growth_fmt.lower()
 
         if col == "growth":
-            growth_fmt = metric_props.get("growth_fmt", "")
-            # Check if this is a bps metric - use diff value instead of growth
-            if "bps" in growth_fmt.lower():
-                # diff is already in percentage points, multiply by 100 to get bps
+            # For bps metrics, leave % Growth empty (ratios only measure change in bps)
+            if is_bps_metric:
+                return ""
+            return self.helper.get_formatted_num(row[col], growth_fmt)
+        elif col == "diff":
+            # For bps metrics, show Change as bps
+            if is_bps_metric:
                 diff_val = row.get("diff") if hasattr(row, "get") else row["diff"]
                 if pd.notna(diff_val) and isinstance(diff_val, (int, float)):
                     bps_value = diff_val * 100
                     return f"{bps_value:.0f} bps"
                 return ""
-            return self.helper.get_formatted_num(row[col], growth_fmt)
+            fmt = metric_props.get("fmt", "")
+            return self.helper.get_formatted_num(row[col], fmt)
         else:
             fmt = metric_props.get("fmt", "")
             return self.helper.get_formatted_num(row[col], fmt)
@@ -292,12 +298,15 @@ class InsuranceDriverAnalysis(DriverAnalysis):
         is_bps_metric = "bps" in growth_fmt.lower()
 
         for col in ["curr", "prev", "diff", "diff_pct"]:
-            if col == "diff_pct" and is_bps_metric:
-                # For bps metrics, use diff value converted to bps
+            if col == "diff" and is_bps_metric:
+                # For bps metrics, show Change as bps
                 breakout_df[col] = breakout_df.apply(
                     lambda row: f"{row['diff'] * 100:.0f} bps" if pd.notna(row['diff']) and isinstance(row['diff'], (int, float)) else "",
                     axis=1
                 )
+            elif col == "diff_pct" and is_bps_metric:
+                # For bps metrics, leave % Growth empty (ratios only measure change in bps)
+                breakout_df[col] = ""
             else:
                 breakout_df[col] = breakout_df.apply(
                     lambda row: self.helper.get_formatted_num(row[col],

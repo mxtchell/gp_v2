@@ -11,6 +11,7 @@ from ar_analytics import DriverAnalysisTemplateParameterSetup, ArUtils
 from analysis_class_overrides.metric_drivers import InsuranceDriverAnalysis
 from analysis_class_overrides.templates.default_table_with_chart import default_table_with_chart_layout
 from ar_analytics.defaults import metric_driver_analysis_config, get_table_layout_vars
+from genpact_formatting import smart_title
 
 import jinja2
 import logging
@@ -147,7 +148,7 @@ def render_layout(tables, title, subtitle, insights_dfs, warnings, max_prompt, i
     viz_list = []
     export_data = {}
 
-    general_vars = {"headline": title.title() if title else "Total",
+    general_vars = {"headline": smart_title(title) if title else "Total",
                     "sub_headline": subtitle if subtitle else "Driver Analysis",
                     "hide_growth_warning": False if warnings else True,
                     "exec_summary": insights if insights else "No Insights.",

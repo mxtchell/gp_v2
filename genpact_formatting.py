@@ -3,6 +3,27 @@ Genpact-specific formatting functions for numeric values.
 """
 
 import pandas as pd
+import re
+
+# Acronyms that should stay fully uppercase when title-casing
+UPPERCASE_ACRONYMS = {'US', 'UK', 'APAC', 'EU', 'USA', 'EMEA', 'LATAM', 'ANZ', 'MENA'}
+
+
+def smart_title(text: str) -> str:
+    """
+    Title-case text while preserving acronyms that should stay uppercase.
+    E.g., "us driver analysis" -> "US Driver Analysis"
+    """
+    if not text:
+        return text
+    # First apply normal title case
+    titled = text.title()
+    # Then fix acronyms - match word boundaries
+    for acronym in UPPERCASE_ACRONYMS:
+        # Match the title-cased version (e.g., "Us", "Uk", "Apac")
+        pattern = r'\b' + acronym.title() + r'\b'
+        titled = re.sub(pattern, acronym, titled)
+    return titled
 
 
 def genpact_format_number(value, add_dollar_sign=False):

@@ -9,6 +9,7 @@ from ar_analytics import BreakoutAnalysisTemplateParameterSetup, ArUtils
 from analysis_class_overrides.dimension_breakout import InsuranceLegacyBreakout
 from ar_analytics.defaults import dimension_breakout_config, get_table_layout_vars, \
     default_bridge_chart_viz, default_ppt_table_layout
+from genpact_formatting import smart_title
 from analysis_class_overrides.templates.default_table_with_chart import default_table_with_chart_layout
 from ar_analytics.helpers.df_meta_util import apply_metadata_to_layout_element
 from skill_framework import SkillInput, SkillVisualization, skill, SkillParameter, SkillOutput, SuggestedQuestion, \
@@ -170,7 +171,7 @@ def render_layout(tables, bridge_chart_data, title, subtitle, insights_dfs, warn
     slides = []
     export_data = {}
 
-    general_vars = {"headline": title.title() if title else "Total",
+    general_vars = {"headline": smart_title(title) if title else "Total",
 					"sub_headline": subtitle or "Breakout Analysis",
 					"hide_growth_warning": False if warnings else True,
 					"exec_summary": insights if insights else "No Insights.",

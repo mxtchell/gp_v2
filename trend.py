@@ -9,6 +9,7 @@ from ar_analytics import TrendTemplateParameterSetup, ArUtils
 from analysis_class_overrides.trend import InsuranceAdvanceTrend
 from ar_analytics.defaults import trend_analysis_config, default_trend_chart_layout, default_table_layout, \
     get_table_layout_vars, default_ppt_trend_chart_layout, default_ppt_table_layout
+from genpact_formatting import smart_title
 from skill_framework import SkillVisualization, skill, SkillParameter, SkillInput, SkillOutput, \
     ParameterDisplayDescription
 from skill_framework.layouts import wire_layout
@@ -191,7 +192,7 @@ def render_layout(charts, tables, title, subtitle, insights_dfs, warnings, max_p
     ar_utils = ArUtils()
     insights = ar_utils.get_llm_response(insight_template)
 
-    tab_vars = {"headline": title.title() if title else "Total",
+    tab_vars = {"headline": smart_title(title) if title else "Total",
                 "sub_headline": subtitle or "Trend Analysis",
                 "hide_growth_warning": False if warnings else True,
                 "exec_summary": insights if insights else "No Insight.",

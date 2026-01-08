@@ -218,6 +218,25 @@ class InsuranceDriverAnalysis(DriverAnalysis):
             "chart_data": data
         }
 
+    def _format_metric_column(self, row, col):
+        """Format metric column, with special handling for bps growth metrics."""
+        metric_props = self.helper.get_metric_prop(row.name, self.metric_props)
+
+        if col == "growth":
+            growth_fmt = metric_props.get("growth_fmt", "")
+            # Check if this is a bps metric - use diff value instead of growth
+            if "bps" in growth_fmt.lower():
+                # diff is already in percentage points, multiply by 100 to get bps
+                diff_val = row.get("diff") if hasattr(row, "get") else row["diff"]
+                if pd.notna(diff_val) and isinstance(diff_val, (int, float)):
+                    bps_value = diff_val * 100
+                    return f"{bps_value:.0f} bps"
+                return ""
+            return self.helper.get_formatted_num(row[col], growth_fmt)
+        else:
+            fmt = metric_props.get("fmt", "")
+            return self.helper.get_formatted_num(row[col], fmt)
+
     def get_display_tables(self):
         metric_df = self._metric_df.copy()
         breakout_df = self._breakout_df.copy()
@@ -237,12 +256,8 @@ class InsuranceDriverAnalysis(DriverAnalysis):
         # Apply formatting for metric_df
         for col in ["curr", "prev", "diff", "growth"]:
             metric_df[col] = metric_df.apply(
-                lambda row: self.helper.get_formatted_num(
-                    row[col],
-                    self.helper.get_metric_prop(row.name, self.metric_props).get("fmt",
-                                                                                 "") if col != "growth" else self.helper.get_metric_prop(
-                        row.name, self.metric_props).get("growth_fmt", "")
-                ), axis=1
+                lambda row, c=col: self._format_metric_column(row, c),
+                axis=1
             )
 
         if "impact" in metric_df.columns:
@@ -273,13 +288,23 @@ class InsuranceDriverAnalysis(DriverAnalysis):
         breakout_chart_vars = {}
 
         # Apply formatting for breakout_df
+        growth_fmt = self.ba.target_metric.get("growth_fmt", "")
+        is_bps_metric = "bps" in growth_fmt.lower()
+
         for col in ["curr", "prev", "diff", "diff_pct"]:
-            breakout_df[col] = breakout_df.apply(
-                lambda row: self.helper.get_formatted_num(row[col],
-                                                          self.ba.target_metric["fmt"] if col != "diff_pct" else
-                                                          self.ba.target_metric["growth_fmt"]),
-                axis=1
-            )
+            if col == "diff_pct" and is_bps_metric:
+                # For bps metrics, use diff value converted to bps
+                breakout_df[col] = breakout_df.apply(
+                    lambda row: f"{row['diff'] * 100:.0f} bps" if pd.notna(row['diff']) and isinstance(row['diff'], (int, float)) else "",
+                    axis=1
+                )
+            else:
+                breakout_df[col] = breakout_df.apply(
+                    lambda row: self.helper.get_formatted_num(row[col],
+                                                              self.ba.target_metric["fmt"] if col != "diff_pct" else
+                                                              self.ba.target_metric["growth_fmt"]),
+                    axis=1
+                )
 
         # Format rank column
         breakout_df["rank_curr"] = breakout_df["rank_curr"]

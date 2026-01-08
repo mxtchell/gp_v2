@@ -252,7 +252,7 @@ class InsuranceDriverAnalysis(DriverAnalysis):
 
         # rename columns
         metric_df = metric_df.rename(
-            columns={'curr': 'Value', 'prev': 'Prev Value', 'diff': 'Change', 'growth': '% Growth'})
+            columns={'curr': 'Value', 'prev': 'Prev Value', 'diff': 'Change', 'growth': '% Growth', 'sparkline': 'SPARKLINE (L24M)'})
         
         metric_df = metric_df.reset_index()
 
@@ -317,7 +317,7 @@ class InsuranceDriverAnalysis(DriverAnalysis):
             b_df = b_df[[dim] + breakout_required_columns]
 
             rename_dict = {'curr': 'Value', 'prev': 'Prev Value', 'diff': 'Change', 'diff_pct': '% Growth',
-                         'rank_change': 'Rank Change'}
+                         'rank_change': 'Rank Change', 'sparkline': 'SPARKLINE (L24M)'}
 
             # rename columns
             b_df = b_df.rename(

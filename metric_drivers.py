@@ -158,7 +158,7 @@ def render_layout(tables, title, subtitle, insights_dfs, warnings, max_prompt, i
         table_df = table_info["df"]
         export_data[name] = table_df
         hide_footer = True
-        table_vars = get_table_layout_vars(table_df, sparkline_col="sparkline")
+        table_vars = get_table_layout_vars(table_df, sparkline_col="SPARKLINE (L24M)")
         table_vars["hide_footer"] = hide_footer
         if "chart_vars" not in table_info:
             table_vars["hide_chart"] = True

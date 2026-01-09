@@ -284,6 +284,88 @@ def build_whatif_tables(claims_tables, profit_tables, impact_pct, breakouts):
     return whatif_tables
 
 
+def build_whatif_chart(df):
+    """Build column chart showing current vs projected profit by country."""
+    from genpact_formatting import genpact_format_number
+
+    # Parse values from formatted strings
+    def parse_val(val):
+        if pd.isna(val) or val == '':
+            return 0
+        if isinstance(val, (int, float)):
+            return val
+        val_str = str(val).replace('$', '').replace(',', '').strip()
+        multiplier = 1
+        if val_str.endswith('B'):
+            multiplier = 1_000_000_000
+            val_str = val_str[:-1]
+        elif val_str.endswith('M'):
+            multiplier = 1_000_000
+            val_str = val_str[:-1]
+        elif val_str.endswith('K'):
+            multiplier = 1_000
+            val_str = val_str[:-1]
+        try:
+            return float(val_str) * multiplier
+        except:
+            return 0
+
+    categories = df['Country'].tolist()
+
+    # Get current and projected profit values
+    current_data = []
+    projected_data = []
+
+    for _, row in df.iterrows():
+        curr_val = parse_val(row.get('Profit (Current)', 0))
+        proj_val = parse_val(row.get('Profit (Projected)', 0))
+
+        current_data.append({
+            "name": row['Country'],
+            "y": curr_val / 1_000_000,  # Scale to millions
+            "formatted": f"${genpact_format_number(curr_val)}"
+        })
+        projected_data.append({
+            "name": row['Country'],
+            "y": proj_val / 1_000_000,  # Scale to millions
+            "formatted": f"${genpact_format_number(proj_val)}"
+        })
+
+    chart_data = [
+        {
+            "name": "Profit (Current)",
+            "data": current_data,
+            "color": "#5DADE2",
+            "dataLabels": {"enabled": False},
+            "tooltip": {"pointFormat": "<b>{series.name}</b>: {point.formatted}"}
+        },
+        {
+            "name": "Profit (Projected)",
+            "data": projected_data,
+            "color": "#F8C471",
+            "dataLabels": {"enabled": False},
+            "tooltip": {"pointFormat": "<b>{series.name}</b>: {point.formatted}"}
+        }
+    ]
+
+    # Find min/max for y-axis
+    all_vals = [d["y"] for d in current_data + projected_data]
+    min_val = min(all_vals) if all_vals else 0
+    max_val = max(all_vals) if all_vals else 100
+
+    y_axis = [{
+        "title": "",
+        "labels": {"format": "${value}M"}
+    }]
+
+    return {
+        "chart_categories": categories,
+        "chart_y_axis": y_axis,
+        "chart_title": "",
+        "chart_data": chart_data
+    }
+
+
 def render_whatif_layout(tables, title, subtitle, facts, impact_pct, max_prompt, insight_prompt, viz_layout):
     """Render the what-if analysis layout."""
 
@@ -301,7 +383,7 @@ def render_whatif_layout(tables, title, subtitle, facts, impact_pct, max_prompt,
         "headline": smart_title(title) if title else "What-If Analysis",
         "sub_headline": subtitle,
         "hide_growth_warning": True,
-        "exec_summary": insights if insights else "No Insights.",
+        "exec_summary": "",  # Don't show at top - narrative shows below
         "warning": None
     }
 
@@ -313,7 +395,10 @@ def render_whatif_layout(tables, title, subtitle, facts, impact_pct, max_prompt,
 
         table_vars = get_table_layout_vars(table_df)
         table_vars["hide_footer"] = True
-        table_vars["hide_chart"] = True
+
+        # Build column chart data
+        chart_vars = build_whatif_chart(table_df)
+        table_vars = {**table_vars, **chart_vars}
 
         rendered = wire_layout(viz_layout_parsed, {**general_vars, **table_vars})
         viz_list.append(SkillVisualization(title=name, layout=rendered))

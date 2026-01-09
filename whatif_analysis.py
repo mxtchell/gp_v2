@@ -10,7 +10,7 @@ from ar_analytics import BreakoutAnalysisTemplateParameterSetup, ArUtils
 from analysis_class_overrides.dimension_breakout import InsuranceLegacyBreakout
 from ar_analytics.defaults import dimension_breakout_config, get_table_layout_vars, default_ppt_table_layout
 from genpact_formatting import smart_title, genpact_format_number
-from analysis_class_overrides.templates.default_table_with_chart import default_table_with_chart_layout
+from analysis_class_overrides.templates.whatif_layout import whatif_layout
 from skill_framework import SkillInput, SkillVisualization, skill, SkillParameter, SkillOutput, ParameterDisplayDescription
 from skill_framework.layouts import wire_layout
 from skill_framework.preview import preview_skill
@@ -93,7 +93,7 @@ Impact percentage: {{impact_pct}}%"""
             name="table_viz_layout",
             parameter_type="visualization",
             description="Table Viz Layout",
-            default_value=default_table_with_chart_layout
+            default_value=whatif_layout
         )
     ]
 )
@@ -381,10 +381,7 @@ def render_whatif_layout(tables, title, subtitle, facts, impact_pct, max_prompt,
 
     general_vars = {
         "headline": smart_title(title) if title else "What-If Analysis",
-        "sub_headline": subtitle,
-        "hide_growth_warning": True,
-        "exec_summary": "",  # Don't show at top - narrative shows below
-        "warning": None
+        "sub_headline": subtitle
     }
 
     viz_layout_parsed = json.loads(viz_layout)

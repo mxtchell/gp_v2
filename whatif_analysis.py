@@ -102,7 +102,7 @@ def whatif_analysis(parameters: SkillInput):
 
     # Extract parameters
     metrics = getattr(parameters.arguments, 'metrics', ["claims_expense", "underwriting_profit"]) or ["claims_expense", "underwriting_profit"]
-    impact_pct = getattr(parameters.arguments, 'impact_pct', 10) or 10
+    impact_pct = float(getattr(parameters.arguments, 'impact_pct', 10) or 10)
     periods = getattr(parameters.arguments, 'periods', []) or []
     breakouts = getattr(parameters.arguments, 'breakouts', None)
     limit_n = getattr(parameters.arguments, 'limit_n', 10) or 10

@@ -200,28 +200,24 @@ def build_whatif_tables(claims_tables, profit_tables, impact_pct, breakouts):
     claims_df = claims_tables[claims_key]["df"].copy()
     profit_df = profit_tables[profit_key]["df"].copy()
 
-    # Get the dimension column (first column that's not a metric column)
+    print(f"Claims DF columns: {claims_df.columns.tolist()}")
+    print(f"Profit DF columns: {profit_df.columns.tolist()}")
+
+    # Get the dimension column (first column)
     dim_col = claims_df.columns[0]
 
-    # Rename claims columns
-    claims_df = claims_df.rename(columns={
-        'Value': 'Claims (Current)',
-        'Prev Value': 'Claims (Previous)',
-        'Change': 'Claims Change',
-        '% Growth': 'Claims Growth %'
-    })
+    # Find the current and previous columns dynamically
+    claims_curr_col = [c for c in claims_df.columns if '(Current)' in c][0]
+    claims_prev_col = [c for c in claims_df.columns if '(Previous)' in c][0]
+    profit_curr_col = [c for c in profit_df.columns if '(Current)' in c][0]
+    profit_prev_col = [c for c in profit_df.columns if '(Previous)' in c][0]
 
-    # Rename profit columns
-    profit_df = profit_df.rename(columns={
-        'Value': 'Profit (Current)',
-        'Prev Value': 'Profit (Previous)',
-        'Change': 'Profit Change',
-        '% Growth': 'Profit Growth %'
-    })
+    print(f"Claims cols: {claims_curr_col}, {claims_prev_col}")
+    print(f"Profit cols: {profit_curr_col}, {profit_prev_col}")
 
     # Merge on dimension
-    merged_df = claims_df[[dim_col, 'Claims (Current)', 'Claims (Previous)']].merge(
-        profit_df[[dim_col, 'Profit (Current)', 'Profit (Previous)']],
+    merged_df = claims_df[[dim_col, claims_curr_col, claims_prev_col]].merge(
+        profit_df[[dim_col, profit_curr_col, profit_prev_col]],
         on=dim_col,
         how='outer'
     )
@@ -253,27 +249,26 @@ def build_whatif_tables(claims_tables, profit_tables, impact_pct, breakouts):
     # Calculate projected values
     results = []
     for _, row in merged_df.iterrows():
-        claims_prev = parse_value(row['Claims (Previous)'])
-        claims_curr = parse_value(row['Claims (Current)'])
-        profit_prev = parse_value(row['Profit (Previous)'])
-        profit_curr = parse_value(row['Profit (Current)'])
+        claims_prev = parse_value(row[claims_prev_col])
+        claims_curr = parse_value(row[claims_curr_col])
+        profit_prev = parse_value(row[profit_prev_col])
+        profit_curr = parse_value(row[profit_curr_col])
 
-        # What-if: claims increase by impact_pct from previous
-        claims_projected = claims_prev * (1 + impact_multiplier)
-        claims_impact = claims_projected - claims_prev
+        # What-if: claims increase by impact_pct from current
+        claims_projected = claims_curr * (1 + impact_multiplier)
+        claims_impact = claims_projected - claims_curr
 
         # Profit impact: direct inverse (claims up = profit down)
-        profit_projected = profit_prev - claims_impact
-        profit_impact = profit_projected - profit_prev
-        profit_impact_pct = (profit_impact / profit_prev * 100) if profit_prev != 0 else 0
+        profit_projected = profit_curr - claims_impact
+        profit_impact = -claims_impact
+        profit_impact_pct = (profit_impact / profit_curr * 100) if profit_curr != 0 else 0
 
         results.append({
-            dim_col: row[dim_col],
-            'Claims (Previous)': f"${genpact_format_number(claims_prev)}",
+            'Country': row[dim_col],
+            'Claims (Current)': f"${genpact_format_number(claims_curr)}",
             'Claims (Projected)': f"${genpact_format_number(claims_projected)}",
             'Claims Impact': f"${genpact_format_number(claims_impact)}",
-            'Claims Impact %': f"{impact_pct:+.0f}%",
-            'Profit (Previous)': f"${genpact_format_number(profit_prev)}",
+            'Profit (Current)': f"${genpact_format_number(profit_curr)}",
             'Profit (Projected)': f"${genpact_format_number(profit_projected)}",
             'Profit Impact': f"${genpact_format_number(profit_impact)}",
             'Profit Impact %': f"{profit_impact_pct:+.1f}%"

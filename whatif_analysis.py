@@ -36,11 +36,11 @@ Impact percentage: {{impact_pct}}%"""
 @skill(
     name="What-If Analysis",
     llm_name="whatif_analysis",
-    description="Analyzes what-if scenarios for claims expense impact on operating profit. Models how a percentage change in claims expense would affect profitability by country or segment.",
-    capabilities="Model impact of claims expense changes on operating profit. Show projected values and changes by dimension. Generate insights about scenario impact.",
-    limitations="Fixed to claims_expense and operating_profit metrics only. Assumes direct 1:1 relationship between claims increase and profit decrease.",
-    example_questions="What if claims expense increases by 25% in Europe? How would a 10% rise in claims affect UK profitability? Model 15% claims increase impact on P&C by country.",
-    parameter_guidance="Always specify impact_pct (the percentage change to model). Use positive values for increases, negative for decreases. Specify breakout dimension (usually country) and filters (region, business segment, time period).",
+    description="Models what-if scenarios showing how a % change in claims_expense impacts operating_profit by country. METRICS ARE FIXED: claims_expense and operating_profit - do NOT ask user to select metrics.",
+    capabilities="Model impact of claims expense changes on operating profit by country. Metrics are hardcoded - just need impact_pct, breakout, filters, and period.",
+    limitations="Metrics are FIXED to claims_expense and operating_profit. Breakout by country. Assumes direct 1:1 inverse relationship (claims up = profit down).",
+    example_questions="What if claims expense increases by 25% in Europe? How would a 10% rise in claims affect profitability by country? Model 15% claims increase impact on P&C.",
+    parameter_guidance="Metrics are HARDCODED (claims_expense, operating_profit) - do NOT select metrics. Only need: impact_pct (e.g., 25 for +25%), breakouts (country), other_filters (region, business), periods.",
     parameters=[
         SkillParameter(
             name="impact_pct",

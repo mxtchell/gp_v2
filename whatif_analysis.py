@@ -104,7 +104,13 @@ def whatif_analysis(parameters: SkillInput):
     limit_n = getattr(parameters.arguments, 'limit_n', 10) or 10
     other_filters = getattr(parameters.arguments, 'other_filters', []) or []
 
-    print(f"What-If Analysis - Impact: {impact_pct}%, Breakouts: {breakouts}, Filters: {other_filters}")
+    # Debug: print all arguments
+    print(f"What-If Analysis - All arguments: {parameters.arguments}")
+    print(f"What-If Analysis - Impact: {impact_pct}%, Breakouts: {breakouts}, Periods: {periods}, Filters: {other_filters}")
+
+    # Ensure breakouts is a list if provided
+    if breakouts and not isinstance(breakouts, list):
+        breakouts = [breakouts]
 
     # Run breakout analysis for claims_expense
     claims_env = SimpleNamespace(
@@ -117,7 +123,9 @@ def whatif_analysis(parameters: SkillInput):
         growth_trend=None,
         calculated_metric_filters=None
     )
+    print(f"Claims env breakouts before setup: {claims_env.breakouts}")
     BreakoutAnalysisTemplateParameterSetup(env=claims_env)
+    print(f"Claims env breakouts after setup: {getattr(claims_env, 'breakouts', 'NOT SET')}")
     claims_env.ba = InsuranceLegacyBreakout.from_env(env=claims_env)
     claims_env.ba.run_from_env()
     claims_tables = claims_env.ba.get_display_tables()

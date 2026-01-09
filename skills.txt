@@ -2,3 +2,4 @@ dimension_breakout.py
 metric_drivers.py
 trend.py
 document_rag_explorer.py
+whatif_analysis.py

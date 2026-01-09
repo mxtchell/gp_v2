@@ -149,13 +149,10 @@ def whatif_analysis(parameters: SkillInput):
     # Build what-if table
     whatif_tables = build_whatif_tables(claims_tables, profit_tables, impact_pct, breakouts)
 
-    # Build parameter display info
-    param_info = [
-        ParameterDisplayDescription(key="Scenario", value=f"{'+' if impact_pct >= 0 else ''}{impact_pct}% Claims Change"),
-        ParameterDisplayDescription(key="Metrics", value="Claims Expense, Operating Profit"),
-    ]
-    if breakouts:
-        param_info.append(ParameterDisplayDescription(key="Breakout", value=", ".join(breakouts) if isinstance(breakouts, list) else breakouts))
+    # Build parameter display info - use the breakout analysis params and add scenario
+    param_info = [ParameterDisplayDescription(key=k, value=v) for k, v in claims_env.ba.paramater_display_infomation.items()]
+    # Add scenario as first pill
+    param_info.insert(0, ParameterDisplayDescription(key="Scenario", value=f"{'+' if impact_pct >= 0 else ''}{impact_pct}% Claims Change"))
 
     # Build facts for insights
     facts = []

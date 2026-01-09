@@ -43,6 +43,13 @@ Impact percentage: {{impact_pct}}%"""
     parameter_guidance="Metrics are HARDCODED (claims_expense, operating_profit) - do NOT select metrics. Only need: impact_pct (e.g., 25 for +25%), breakouts (country), other_filters (region, business), periods.",
     parameters=[
         SkillParameter(
+            name="metrics",
+            is_multi=True,
+            constrained_to="metrics",
+            description="Metrics for what-if analysis. First metric is the input (changed by impact_pct), second is the output (impacted).",
+            default_value=["claims_expense", "underwriting_profit"]
+        ),
+        SkillParameter(
             name="impact_pct",
             description="The percentage change to model for claims expense. Use positive for increase (e.g., 25 for +25%), negative for decrease (e.g., -10 for -10%).",
             default_value=10
@@ -91,20 +98,21 @@ Impact percentage: {{impact_pct}}%"""
     ]
 )
 def whatif_analysis(parameters: SkillInput):
-    """What-If Analysis - model claims expense impact on operating profit"""
-
-    # Fixed metrics for this skill
-    CLAIMS_METRIC = "claims_expense"
-    PROFIT_METRIC = "operating_profit"
+    """What-If Analysis - model claims expense impact on underwriting profit"""
 
     # Extract parameters
+    metrics = getattr(parameters.arguments, 'metrics', ["claims_expense", "underwriting_profit"]) or ["claims_expense", "underwriting_profit"]
     impact_pct = getattr(parameters.arguments, 'impact_pct', 10) or 10
     periods = getattr(parameters.arguments, 'periods', []) or []
     breakouts = getattr(parameters.arguments, 'breakouts', None)
     limit_n = getattr(parameters.arguments, 'limit_n', 10) or 10
     other_filters = getattr(parameters.arguments, 'other_filters', []) or []
 
-    print(f"What-If Analysis - Impact: {impact_pct}%, Breakouts: {breakouts}, Filters: {other_filters}")
+    # Get the two metrics - first is input (claims), second is output (profit)
+    CLAIMS_METRIC = metrics[0] if len(metrics) > 0 else "claims_expense"
+    PROFIT_METRIC = metrics[1] if len(metrics) > 1 else "underwriting_profit"
+
+    print(f"What-If Analysis - Metrics: {CLAIMS_METRIC}, {PROFIT_METRIC}, Impact: {impact_pct}%, Breakouts: {breakouts}, Filters: {other_filters}")
 
     # Run breakout analysis for claims_expense
     claims_env = SimpleNamespace(
